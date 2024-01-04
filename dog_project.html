@@ -1,0 +1,238 @@
+<!DOCTYPE HTML>
+<!--
+	Massively by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Robot Dog Project</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+        <div id="wrapper">
+
+            <!-- Header -->
+            <header id="header">
+                <a href="index.html" class="logo">Dog Project</a>
+            </header>
+
+            <!-- Nav -->
+            <nav id="nav">
+                <ul class="links">
+                    <li><a href="index.html">Projects</a></li>
+                    <li class="active"><a href="about.html">Dog Project</a></li>
+                </ul>
+                <ul class="icons">
+                    <!-- <li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+                    <li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+                    <li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li> -->
+                    <li><a href="https://github.com/muye1202/quadruped_locomotion_project" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+                </ul>
+            </nav>
+
+            <!-- Main -->
+            <div id="main">
+
+                <!-- Post -->
+                <section class="post">
+                    <header class="major">
+                        <h1>Training and Deployment Pipeline for Learning Quadruped Locomotion</h1>
+                        <p>
+                            Training and deploying visuomotor RL model for robot dog control to enhance its mobility.
+                            The GitHub link to the repo (still being updated) can be found <a href="https://github.com/muye1202/quadruped_locomotion_project">here</a>
+                        </p>
+                    </header>
+                    
+                    <h2>Task Videos</h2>
+                    <p>
+                        One single visuomotor RL policy (the realsense camera is out of frame) enables the Unitree GO1 robot dog to 
+                        complete different tasks that cannot be accomplished by Unitree's official low-level controller, as shown below. 
+                    </p>
+                    <p style="text-align: center;">
+                        The Unitree Go1 in all three of the following videos are controlled by our visuomotor policy (vision transformer as visual encoder), the RL algorithm we used is PPO.
+                    </p>
+                    <h3>Adjust Its Height To Go Through Obstacles</h3>
+                    <div class="video">
+                        <video width="1280" height="720" autoplay muted loop>
+                            <source src="images/under_table.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <h3>Four Modes of Gaits</h3>
+                    <div class="video">
+                        <video width="1280" height="720" autoplay muted loop>
+                            <source src="images/modes_with_subtitles.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <h3>Traverse Uneven Terrain</h3>
+                    <div class="video">
+                        <video width="1280" height="720" autoplay muted loop>
+                            <source src="images/traversing_uneven.mp4" type="video/mp4">
+                        </video>
+                    </div>
+
+                    <h2>Deployment Pipeline</h2>
+                    <header class="image fit">
+                        <img src="images/deploy_pipeline.png" alt="" />
+                    </header>
+                    <p>The deployment pipeline we constructed can be used for most of the quadruped projects that use camera images as input. The RL policy takes both the states of the dog and 
+                       the RC Commands as input and these two information needs to be updated in real time, alongside the depth camera image; therefore, two separate processes are run, one on-board 
+                       the Unitree Go1 computer to receive dog states and RC commands, and the other one on an external Nvidia Jetson Nano for performing model inference. This approach ensures that
+                       the dog will always have joint commands to execute, even during computation delay from large neural networks.
+                    </p>
+
+                    <h3>Python Wrapper for Go1 Low-level Control</h3>
+                    <p>I created a Python wrapper for the official Unitree Legged SDK so learning-based robot dog project can easily receive the 
+                       states readings from Go1 and send joint-state actions to the dog using the Python API wrapper. The wrapper is implemented using
+                       Pybind11. 
+                    </p>
+
+                    <h3>LCM Communication</h3>
+                    <p>
+                        The communication in the deployment is mainly implemented using Light-weight Communication and Marshalling (LCM). For example, LCM is used
+                        when trying to send dog states and RC commands messages from Go1 to Nvidia Jetson Nano; the two hosts are set to be in the same sub-net, thereby
+                        building a message sharing bridge. The sending host needs to instantiate a publisher with a custom LCM message type and publish to a topic; the receiving end needs to subscribe to
+                        the topic and a LCM message handling function needs to be running in a separate thread to process incoming messages.  
+                    </p>
+
+                    <p>The LCM communication allows us to establish message publishing and subscribing mechanisms anywhere in the conventional Python or C++
+                        scripts, avoiding migrating the entire deep learning pipeline to ROS framework.
+                    </p>
+   
+                    <h2>Training Pipeline</h2>
+                    <header class="image fit">
+                        <img src="images/dog_train_pipeline.png" alt="" />
+                    </header>
+                    <p>The central component of the control policy is the PPO network, which takes the proprioceptive states of the dog, depth image from camera, remote control commands, gait offset parameters as input during training (similar as deployment)
+                       As shown in the diagram above, Nvidia Isaac Gym is chosen as the physics simulator for its unique compatibility with RL related training.
+                       A large number of dogs are simulated in paralell to collectively gather trajectory roll-out for the "experience buffer", which will then be sampled to update the PPO network.
+                    </p>
+
+                    <h3>Visual Encoder</h3>
+                    <p>
+                        In order to fully utilize the power of large neural network and better distill the visual features in the depth images, we experimented with several models known to have a great
+                        performance in processing images: 1. the good old CNN models; 2. the Vision Transformers.
+                    </p>
+
+                    <h3>ViT Superior to CNN encoder</h3>
+                    <p style="text-align: center;">Convolutional Neural Network visual encoder performance</p>
+                    <div class="video">
+                        <video width="1280" height="720" autoplay muted loop>
+                            <source src="images/cnn_gaits.mp4" type="video/mp4">
+                        </video>
+                    </div>
+
+                    <p style="text-align: center;">Vision Transformer encoder performance</p>
+                    <div class="video">
+                        <video width="1280" height="720" autoplay muted loop>
+                            <source src="images/vit_gaits.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <p>
+                        As can be seen, the gaits generated by the visual transformer are more graceful and natural due to ViT's superior ability to 
+                        extract features from images, and also because ViT's capability increases with larger network sizes while the trainability 
+                        remains tractable, unlike its convolutional counterpart.
+                    </p>
+
+                    <h3>Featured Training Statistics</h3>
+                    <header class="image fit">
+                        <img src="images/training_stats.png" alt="" />
+                    </header>
+                    <p>
+                        Here we show three important training statistics that gives us insight to the quadruped's learning curve. The reward in the first (leftmost) graph
+                        measures how well the robot dog is tracking desired leg swing patterns--higher reward means the dog's leg swing is more realistic, enabling it to 
+                        move with desired styles; the second graph shows that the smoothness of the dog's action is improving as training iterations progress; the third graph
+                        describes how well the dog is tracking the desired foot-contact schedule--higher reward signifies that the dog is learning to do foot placement in a more
+                        realistic frequency.
+                    </p>
+
+                    <h3>Work Cited</h3>
+                    <p>
+                        This work mainly builds upon the paper <a href=https://github.com/Improbable-AI/walk-these-ways>walk-these-ways</a>. The paper focuses on desigining
+                        policy that only uses proprioceptive states of the robot dog, whereas our paper tries adds in the visual information and fully utilizes the size of 
+                        neural network policy; this project is still on-going and our future work includes applying large vision or language models to control quadrupeds, and 
+                        the work here establishes the foundation on which future quadruped related research can be carried out easily.
+                    </p>
+                    <p>
+                        For the project shown in the post, Muye created the python wrapper for Unitree's low-level control library,
+                        the LCM depth camera pipeline, the deployment code, and the training code for ViT visual encoder; Guo comes up
+                        with the idea to apply large vision model in quadruped control, writes the code for CNN visual encoder, modifies 
+                        the training pipeline, and provided crucial insights in solving technical issues along the way.
+                    </p>
+
+                </section>
+
+            </div>
+
+            <!-- Footer -->
+            <footer id="footer">
+                <section>
+                    <form method="post" action="#">
+                        <div class="fields">
+                            <div class="field">
+                                <label for="name">Name</label>
+                                <input type="text" name="name" id="name" />
+                            </div>
+                            <div class="field">
+                                <label for="email">Email</label>
+                                <input type="text" name="email" id="email" />
+                            </div>
+                            <div class="field">
+                                <label for="message">Message</label>
+                                <textarea name="message" id="message" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <ul class="actions">
+                            <li><input type="submit" value="Send Message" /></li>
+                        </ul>
+                    </form>
+                </section>
+                <section class="split contact">
+                    <section class="alt">
+                        <h3>Address</h3>
+                        <p>2145 Sheridan Rd<br />
+                        Evanston, IL 60208</p>
+                    </section>
+                    <section>
+                        <h3>Phone</h3>
+                        <p><a href="#">(734) 510-1501</a></p>
+                    </section>
+                    <section>
+                        <h3>Email</h3>
+                        <p><a href="#">muyejia2023@u.northwestern.edu</a></p>
+                    </section>
+                    <section>
+                        <h3>Social</h3>
+                        <ul class="icons alt">
+                            <!-- <li><a href="#" class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+                            <li><a href="#" class="icon brands alt fa-facebook-f"><span class="label">Facebook</span></a></li>
+                            <li><a href="#" class="icon brands alt fa-instagram"><span class="label">Instagram</span></a></li> -->
+                            <li><a href="https://github.com/muye1202" class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+                        </ul>
+                    </section>
+                </section>
+            </footer>
+
+            <!-- Copyright -->
+            <div id="copyright">
+                <ul><li>&copy; Untitled</li><li>Design: <a href="https://html5up.net">HTML5 UP</a></li></ul>
+            </div>
+
+        </div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<!--
+	Massively by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Drone Visual Odometry Project</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+        <div id="wrapper">
+
+            <!-- Header -->
+            <header id="header">
+                <a href="index.html" class="logo">Visual Odometry Project</a>
+            </header>
+
+            <!-- Nav -->
+            <nav id="nav">
+                <ul class="links">
+                    <li><a href="index.html">Projects</a></li>
+                    <li class="active"><a href="about.html">Visual Odometry Project</a></li>
+                </ul>
+                <ul class="icons">
+                    <!-- <li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+                    <li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+                    <li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li> -->
+                    <li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+                </ul>
+            </nav>
+
+            <!-- Main -->
+            <div id="main">
+
+                <!-- Post -->
+                <section class="post">
+                    <header class="major">
+                        <h1>Visual Odometry for DJI Tello Drone</h1>
+                        <p>
+                            A monocular visual odometry pipeline that can be deployed on DJI Tello Drone.
+
+                            For implementation, please visit the GitHub <a href="https://github.com/muye1202/Monocular-Visual-Odometry-for-DJI-Tello-Drone">repo</a> for this project!
+                        </p>
+                    </header>
+                    <div class="video">
+                        <video width="1280" height="720" autoplay muted loop>
+                            <source src="images/draw_points.mp4" type="video/mp4">
+                        </video>
+                    </div>
+
+                    <h2>Visual Odometry Pipeline</h2>
+                    <header class="image fit">
+                        <img src="images/vo_pipeline.png" alt="" />
+                    </header>
+                    <p>
+                        The pipeline starts with camera calibration for the RGB camera located on the front
+                        of the drone; then the images captured will be converted to grayscale, and subsequently fed to
+                        ORB or ShiTomasi feature extractor. Features extracted from the previous frame will be
+                        matched in the next frame to find the image coordinates of the same set of features in the
+                        previous frame and current frame, which can then be used to solve the epipolar constraint
+                        equation for the essential matrix that contains the camera rotation and translation matrix
+                        representing the pose transformation between the two frames. Next, the transformation matrices
+                        will be stitched together to form the entire camera trajectory.
+                    </p>
+
+                    <h3>DJI Monocular Camera Calibration</h3>
+                    <header class="image fit">
+                        <img src="images/cam_calib.png" alt="" />
+                    </header>
+                    <p>
+                        In this project, 10 pictures of a chessboard of known dimensions–with 2’’ by 2’’ squares–are used to
+                        extract the image coordinates of all the corners of the squares using openCV function, set the origin of
+                        the world frame to be at the bottom left corner of the chessboard, assign world coordinates to the
+                        extracted squares, and solve for the camera intrinsic parameters by calculating through the above
+                        procedures.
+                    </p>
+
+                    <h3>Feature Extraction</h3>
+                    <header class="image fit">
+                        <img src="images/feature_extract.png" alt="" />
+                    </header>
+                    <p>
+                        Feature points are identified in each image using open cv ORB and Shi-Tomasi feature extractor 
+                        to prepare for feature points tracking which allows us to calculate the motion
+                        between feature points.
+                    </p>
+
+                    <h3>Optimal Flow</h3>
+                    <header class="image fit">
+                        <img src="images/optical_flow.png" alt="" />
+                    </header>
+                    <p>
+                        The next step would be to track the movement of the same feature points between frames in
+                        order to establish correspondences. The Lucas-Kanade Optical Flow is used to track the
+                        features movement.
+                    </p>
+
+                    <h4>Recover Camera Poses and Construct Trajectory</h4>
+                    <div class="video">
+                        <video width="1280" height="720" autoplay muted loop>
+                            <source src="images/draw_points.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <header class="image fit">
+                        <img src="images/line_1turn_VO_ORB.png" alt="" />
+                        <p style="text-align: center;"> Trajectory formed using visual odometry on real DJI Drone as shown in the video above. </p>
+                    </header>
+                    <header class="image fit">
+                        <img src="images/KITT_Seq2.png" alt="" />
+                        <p style="text-align: center;"> Odometry result on the KITTI dataset sequence 2. </p>
+                    </header>
+                    <p>
+                        After finding correspondences of feature points in two consecutive frames using the LK Optical
+                        Flow as introduced previously, the camera pose transformation between the two frames can be
+                        found by solving the epipolar constraints.
+                    </p>
+                    <p>
+                        Using all the feature points image coordinates, the essential matrix E can be solved using least
+                        square solution. The next step would be to decompose the essential matrix E using singular
+                        value decomposition (SVD)
+                    </p>
+                    <p>
+                        After obtaining all camera transformation matrices between the frames, the R and t can be put
+                        together into a SE(3) transformation matrix, and multiplying the SE(3) matrices together gives
+                        the camera pose at that time step
+                    </p>
+
+                </section>
+
+            </div>
+
+            <!-- Footer -->
+            <footer id="footer">
+                <section>
+                    <form method="post" action="#">
+                        <div class="fields">
+                            <div class="field">
+                                <label for="name">Name</label>
+                                <input type="text" name="name" id="name" />
+                            </div>
+                            <div class="field">
+                                <label for="email">Email</label>
+                                <input type="text" name="email" id="email" />
+                            </div>
+                            <div class="field">
+                                <label for="message">Message</label>
+                                <textarea name="message" id="message" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <ul class="actions">
+                            <li><input type="submit" value="Send Message" /></li>
+                        </ul>
+                    </form>
+                </section>
+                <section class="split contact">
+                    <section class="alt">
+                        <h3>Address</h3>
+                        <p>2145 Sheridan Rd<br />
+                        Evanston, IL 60208</p>
+                    </section>
+                    <section>
+                        <h3>Phone</h3>
+                        <p><a href="#">(734) 510-1501</a></p>
+                    </section>
+                    <section>
+                        <h3>Email</h3>
+                        <p><a href="#">muyejia2023@u.northwestern.edu</a></p>
+                    </section>
+                    <section>
+                        <h3>Social</h3>
+                        <ul class="icons alt">
+                            <!-- <li><a href="#" class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+                            <li><a href="#" class="icon brands alt fa-facebook-f"><span class="label">Facebook</span></a></li>
+                            <li><a href="#" class="icon brands alt fa-instagram"><span class="label">Instagram</span></a></li> -->
+                            <li><a href="https://github.com/muye1202" class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+                        </ul>
+                    </section>
+                </section>
+            </footer>
+
+            <!-- Copyright -->
+            <div id="copyright">
+                <ul><li>&copy; Untitled</li><li>Design: <a href="https://html5up.net">HTML5 UP</a></li></ul>
+            </div>
+
+        </div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
